@@ -7,6 +7,9 @@ from .model_factory.builder import build_mmm
 from .fit_runner.runner import run_fit, run_pipeline
 from .diagnose.convergence import check_convergence
 from .diagnose.report import write_diagnostics
+from .attribute.contributions import get_contributions
+from .attribute.roas import compute_roas
+from .report.render_all import render_all
 from .spec.loader import load_spec, save_spec
 from .spec.schema import Spec
 from .workspace.paths import WORKSPACE, ensure_workspace
@@ -29,4 +32,7 @@ __all__ = [
     "run_pipeline",
     "check_convergence",
     "write_diagnostics",
+    "get_contributions",
+    "compute_roas",
+    "render_all",
 ]

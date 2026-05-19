@@ -104,7 +104,38 @@ def cmd_diagnose(args: list[str]) -> None:
 
 
 def cmd_attribute(args: list[str]) -> None:
-    raise NotImplementedError("Phase 2 — not yet implemented.")
+    import json
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path, idata_path, diagnostics_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.prior_engine.recommender import recommend_priors
+    from agent_mmm.model_factory.builder import build_mmm
+    from agent_mmm.workspace.artifacts import load_idata
+    from agent_mmm.attribute.contributions import get_contributions
+    from agent_mmm.attribute.roas import compute_roas
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    mc = recommend_priors(spec, df)
+    mmm, df_out, control_cols = build_mmm(spec, mc, df)
+    mmm.idata = load_idata()
+
+    target_col = spec.target.column
+    y = df[target_col].rename(target_col)
+    X = df_out.drop(columns=[target_col], errors="ignore")
+
+    contrib_df = get_contributions(mmm)
+    roas_df = compute_roas(mmm, X)
+
+    print("Channel contributions (ILS):")
+    for _, row in contrib_df.iterrows():
+        ch = row["channel"].replace("_spend", "")
+        print(f"  {ch}: {row['mean']:,.0f} (89% CI: {row['hdi_low']:,.0f}–{row['hdi_high']:,.0f})")
+
+    print("\nROAS:")
+    for _, row in roas_df.iterrows():
+        ch = row["channel"].replace("_spend", "")
+        print(f"  {ch}: {row['roas_mean']:.2f}x")
 
 
 def cmd_optimize(args: list[str]) -> None:
@@ -116,7 +147,33 @@ def cmd_improve(args: list[str]) -> None:
 
 
 def cmd_report(args: list[str]) -> None:
-    raise NotImplementedError("Phase 2 — not yet implemented.")
+    import json
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path, diagnostics_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.prior_engine.recommender import recommend_priors
+    from agent_mmm.model_factory.builder import build_mmm
+    from agent_mmm.workspace.artifacts import load_idata
+    from agent_mmm.report.render_all import render_all
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    mc = recommend_priors(spec, df)
+    mmm, df_out, control_cols = build_mmm(spec, mc, df)
+    mmm.idata = load_idata()
+
+    diagnostics = {}
+    if diagnostics_path().exists():
+        diagnostics = json.loads(diagnostics_path().read_text(encoding="utf-8"))
+
+    target_col = spec.target.column
+    y = df[target_col].rename(target_col)
+    X = df_out.drop(columns=[target_col], errors="ignore")
+
+    reports = render_all(mmm, X, y, spec, diagnostics)
+    for role, path in reports.items():
+        print(f"Wrote {role} report")
+    print("Reports written to mmm-workspace/reports/")
 
 
 COMMANDS: dict[str, object] = {
