@@ -139,11 +139,45 @@ def cmd_attribute(args: list[str]) -> None:
 
 
 def cmd_optimize(args: list[str]) -> None:
-    raise NotImplementedError("Phase 3 — not yet implemented.")
+    import json
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.prior_engine.recommender import recommend_priors
+    from agent_mmm.model_factory.builder import build_mmm
+    from agent_mmm.workspace.artifacts import load_idata
+    from agent_mmm.optimize.budget import optimize
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    mc = recommend_priors(spec, df)
+    mmm, df_out, _ = build_mmm(spec, mc, df)
+    mmm.idata = load_idata()
+
+    target_col = spec.target.column
+    X = df_out.drop(columns=[target_col], errors="ignore")
+    result = optimize(mmm, X, spec)
+
+    print(f"Total budget: {sum(result['current_allocation'].values()):,.0f} {result['currency']}")
+    print("Optimal allocation:")
+    for ch, spend in result["optimal_allocation"].items():
+        print(f"  {ch}: {spend:,.0f}")
+    print(f"Expected uplift: {result['expected_uplift_mean']:,.0f} "
+          f"(P5: {result['expected_uplift_p5']:,.0f}, P95: {result['expected_uplift_p95']:,.0f})")
+    print(f"P(positive uplift): {result['p_positive_uplift']*100:.1f}%")
 
 
 def cmd_improve(args: list[str]) -> None:
-    raise NotImplementedError("Phase 3 — not yet implemented.")
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.iter_loop.tournament import run_tournament
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    result = run_tournament(spec, df, max_rounds=3, n_variants=6, patience=2)
+    print(f"Tournament complete. Best score: {result['best_score']:.4f}")
+    print(f"Best run ID: {result['best_run_id']}")
 
 
 def cmd_report(args: list[str]) -> None:

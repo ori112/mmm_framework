@@ -10,6 +10,10 @@ from .diagnose.report import write_diagnostics
 from .attribute.contributions import get_contributions
 from .attribute.roas import compute_roas
 from .report.render_all import render_all
+from .optimize.budget import optimize as optimize_budget
+from .iter_loop.tournament import run_tournament
+from .iter_loop.leaderboard import load_leaderboard
+from .prior_engine.posterior_informed import tighten_priors_from_idata
 from .spec.loader import load_spec, save_spec
 from .spec.schema import Spec
 from .workspace.paths import WORKSPACE, ensure_workspace
@@ -35,4 +39,8 @@ __all__ = [
     "get_contributions",
     "compute_roas",
     "render_all",
+    "optimize_budget",
+    "run_tournament",
+    "load_leaderboard",
+    "tighten_priors_from_idata",
 ]
