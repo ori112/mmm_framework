@@ -5,7 +5,17 @@ build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
 
 # Virtual environments
 .venv
+
+# MMM runtime artifacts
+mmm-workspace/
+*.nc
+
+# Secrets
+.env
+*.env
+
 CLAUDE.md
