@@ -38,3 +38,6 @@ packages = ["src/agent_mmm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: end-to-end pipeline tests that run MCMC (slow)",
+]

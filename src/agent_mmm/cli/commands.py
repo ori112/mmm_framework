@@ -13,27 +13,94 @@ def cmd_intake(args: list[str]) -> None:
 
 
 def cmd_analyze_data(args: list[str]) -> None:
-    raise NotImplementedError("Phase 1 — not yet implemented.")
+    import json
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.data.quality import audit_data
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    result = audit_data(df, spec)
+    print(f"Audit tier: {result.tier}")
+    for f in result.findings:
+        print(f"  [{f.tier}] {f.check}: {f.message}")
 
 
 def cmd_recommend_controls(args: list[str]) -> None:
-    raise NotImplementedError("Phase 1 — not yet implemented.")
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.data.controls import recommend_controls
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    out = recommend_controls(df, spec)
+    print("Recommended controls:")
+    for ctrl in out["controls"]:
+        print(f"  {ctrl}")
 
 
 def cmd_recommend_priors(args: list[str]) -> None:
-    raise NotImplementedError("Phase 1 — not yet implemented.")
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.prior_engine.recommender import recommend_priors
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    mc = recommend_priors(spec, df)
+    print("Model config priors:")
+    for k, v in mc.items():
+        print(f"  {k}: {v}")
 
 
 def cmd_build(args: list[str]) -> None:
-    raise NotImplementedError("Phase 1 — not yet implemented.")
+    from agent_mmm.spec.loader import load_spec
+    from agent_mmm.workspace.paths import spec_path
+    from agent_mmm.data.io import load_panel
+    from agent_mmm.prior_engine.recommender import recommend_priors
+    from agent_mmm.model_factory.builder import build_mmm
+
+    spec = load_spec(spec_path())
+    df = load_panel(spec)
+    mc = recommend_priors(spec, df)
+    mmm, df_out, control_cols = build_mmm(spec, mc, df)
+    print(f"Model built. Controls: {control_cols}")
 
 
 def cmd_fit(args: list[str]) -> None:
-    raise NotImplementedError("Phase 1 — not yet implemented.")
+    from agent_mmm.fit_runner.runner import run_pipeline
+    report = run_pipeline()
+    print("Fit complete.")
+    conv = report.get("convergence", {})
+    rhat = conv.get("rhat_max")
+    if rhat is not None:
+        print(f"  rhat_max: {rhat:.4f}")
+    metrics = report.get("fit_metrics", {})
+    r2 = metrics.get("in_sample_r2")
+    if r2 is not None:
+        print(f"  in_sample_r2: {r2:.4f}")
 
 
 def cmd_diagnose(args: list[str]) -> None:
-    raise NotImplementedError("Phase 1 — not yet implemented.")
+    import json
+    from agent_mmm.workspace.paths import diagnostics_path
+
+    path = diagnostics_path()
+    if not path.exists():
+        print("No diagnostics.json found. Run 'fit' first.")
+        return
+    report = json.loads(path.read_text(encoding="utf-8"))
+    conv = report.get("convergence", {})
+    print(f"Convergence tier: {conv.get('tier', 'unknown')}")
+    rhat = conv.get("rhat_max")
+    if rhat is not None:
+        print(f"  rhat_max: {rhat:.4f}")
+    metrics = report.get("fit_metrics", {})
+    r2 = metrics.get("in_sample_r2")
+    if r2 is not None:
+        print(f"  in_sample_r2: {r2:.4f}")
 
 
 def cmd_attribute(args: list[str]) -> None:

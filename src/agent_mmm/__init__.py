@@ -1,4 +1,12 @@
 from .data.io import load_panel, register_loader
+from .data.quality import audit_data, AuditResult
+from .data.controls import recommend_controls
+from .data.providers.holidays_il import add_il_holiday_flags
+from .prior_engine.recommender import recommend_priors
+from .model_factory.builder import build_mmm
+from .fit_runner.runner import run_fit, run_pipeline
+from .diagnose.convergence import check_convergence
+from .diagnose.report import write_diagnostics
 from .spec.loader import load_spec, save_spec
 from .spec.schema import Spec
 from .workspace.paths import WORKSPACE, ensure_workspace
@@ -11,4 +19,14 @@ __all__ = [
     "ensure_workspace",
     "load_panel",
     "register_loader",
+    "audit_data",
+    "AuditResult",
+    "recommend_controls",
+    "add_il_holiday_flags",
+    "recommend_priors",
+    "build_mmm",
+    "run_fit",
+    "run_pipeline",
+    "check_convergence",
+    "write_diagnostics",
 ]

@@ -1,0 +1,29 @@
+{
+  "true_params": {
+    "google": {
+      "alpha": 0.1,
+      "lam": 4.0,
+      "beta_scale": 300000
+    },
+    "facebook": {
+      "alpha": 0.2,
+      "lam": 3.0,
+      "beta_scale": 250000
+    },
+    "tv": {
+      "alpha": 0.6,
+      "lam": 1.5,
+      "beta_scale": 400000
+    },
+    "baseline_ils": 1000000,
+    "noise_sigma_ils": 80000
+  },
+  "true_roas": {
+    "google": 1.4302,
+    "facebook": 0.9775,
+    "tv": 1.065
+  },
+  "n_weeks": 104,
+  "start_date": "2022-01-03",
+  "seed": 42
+}
