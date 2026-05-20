@@ -112,7 +112,7 @@ def cmd_attribute(args: list[str]) -> None:
     from agent_mmm.model_factory.builder import build_mmm
     from agent_mmm.workspace.artifacts import load_idata
     from agent_mmm.attribute.contributions import get_contributions
-    from agent_mmm.attribute.roas import compute_roas
+    from agent_mmm.attribute.roas import compute_effectiveness
 
     spec = load_spec(spec_path())
     df = load_panel(spec)
@@ -124,18 +124,33 @@ def cmd_attribute(args: list[str]) -> None:
     y = df[target_col].rename(target_col)
     X = df_out.drop(columns=[target_col], errors="ignore")
 
-    contrib_df = get_contributions(mmm)
-    roas_df = compute_roas(mmm, X)
+    is_revenue = spec.target.type == "revenue"
+    currency = getattr(spec, "currency", "ILS")
+    unit_name = spec.target.unit_name or "unit"
 
-    print("Channel contributions (ILS):")
+    contrib_df = get_contributions(mmm)
+    eff_df = compute_effectiveness(mmm, X, spec)
+
+    print("Channel contributions:")
     for _, row in contrib_df.iterrows():
         ch = row["channel"].replace("_spend", "")
-        print(f"  {ch}: {row['mean']:,.0f} (89% CI: {row['hdi_low']:,.0f}–{row['hdi_high']:,.0f})")
+        if is_revenue:
+            print(f"  {ch}: {currency} {row['mean']:,.0f} (89% CI: {row['hdi_low']:,.0f}–{row['hdi_high']:,.0f})")
+        else:
+            print(f"  {ch}: {row['mean']:,.0f} {unit_name}s (89% CI: {row['hdi_low']:,.0f}–{row['hdi_high']:,.0f})")
 
-    print("\nROAS:")
-    for _, row in roas_df.iterrows():
-        ch = row["channel"].replace("_spend", "")
-        print(f"  {ch}: {row['roas_mean']:.2f}x")
+    if len(eff_df) > 0:
+        label = eff_df["metric_label"].iloc[0]
+        print(f"\n{label}:")
+        for _, row in eff_df.iterrows():
+            ch = row["channel"].replace("_spend", "")
+            val = row["metric_value_mean"]
+            implied = row.get("implied_roas_mean", None)
+            if is_revenue:
+                print(f"  {ch}: {val:.2f}x")
+            else:
+                suffix = f"  (implied ROAS {implied:.2f}x)" if (implied is not None and not (isinstance(implied, float) and implied != implied)) else ""
+                print(f"  {ch}: {currency} {val:,.0f}/{unit_name}{suffix}")
 
 
 def cmd_optimize(args: list[str]) -> None:

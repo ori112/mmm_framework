@@ -4,7 +4,7 @@ from __future__ import annotations
 import pandas as pd
 
 from agent_mmm.attribute.contributions import get_contributions
-from agent_mmm.attribute.roas import compute_roas
+from agent_mmm.attribute.roas import compute_effectiveness
 from agent_mmm.diagnose.prior_pull import audit_prior_pull
 from agent_mmm.report.cmo import generate_cmo_report
 from agent_mmm.report.cfo import generate_cfo_report
@@ -27,7 +27,7 @@ def render_all(
     Roles: "cmo", "cfo", "mops", "ds"
     """
     contributions_df = get_contributions(mmm)
-    roas_df = compute_roas(mmm, X)
+    roas_df = compute_effectiveness(mmm, X, spec)
 
     prior_pull_df = None
     try:

@@ -10,7 +10,7 @@ from .diagnose.report import write_diagnostics
 from .diagnose.overfit import compute_overfit
 from .diagnose.prior_pull import audit_prior_pull
 from .attribute.contributions import get_contributions
-from .attribute.roas import compute_roas
+from .attribute.roas import compute_effectiveness, compute_roas, compute_cpa
 from .report.render_all import render_all
 from .optimize.budget import optimize as optimize_budget
 from .iter_loop.tournament import run_tournament
@@ -41,7 +41,9 @@ __all__ = [
     "compute_overfit",
     "audit_prior_pull",
     "get_contributions",
+    "compute_effectiveness",
     "compute_roas",
+    "compute_cpa",
     "render_all",
     "optimize_budget",
     "run_tournament",

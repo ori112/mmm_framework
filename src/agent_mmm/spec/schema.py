@@ -24,7 +24,11 @@ class Channel(BaseModel):
 class TargetUnit(BaseModel):
     column: str
     type: Literal["revenue", "acquisitions", "volume"] = "revenue"
-    # For acquisitions/volume: enables revenue-equivalent ROAS via value * contribution
+    # Human-readable unit name for non-revenue targets: "lead", "policy", "install", "visit", etc.
+    # Drives the cost-per-X metric label: "lead" → CPL, "policy" → CPP, None → CPA
+    unit_name: str | None = None
+    # Monetary value per unit — enables implied ROAS on non-revenue targets
+    # e.g. value_per_unit=250 on leads → implied ROAS = 250 / CPL
     value_per_unit: float = 1.0
 
 
