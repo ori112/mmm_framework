@@ -8,6 +8,7 @@ from .schema import Channel, DataCfg, Spec, SamplerCfg, TargetUnit
 
 _INDUSTRIES = ["retail", "automotive", "insurance", "telco", "saas", "other"]
 _TARGET_TYPES = ["revenue", "acquisitions", "volume"]
+_UNIT_NAME_EXAMPLES = {"acquisitions": "lead / policy / install / signup", "volume": "unit / visit / click"}
 
 
 def _ask(prompt: str, default: str = "") -> str:
@@ -49,9 +50,13 @@ def build_spec_from_answers(
     target_col = _ask("Target KPI column name", "revenue")
     print("Target type:")
     target_type = _ask_choice("Select", _TARGET_TYPES, "revenue")
+    unit_name: str | None = None
     value_per_unit = 1.0
     if target_type in ("acquisitions", "volume"):
-        vpu = _ask("Revenue value per unit (for ROAS equivalence)", "1.0")
+        examples = _UNIT_NAME_EXAMPLES.get(target_type, "unit")
+        raw_unit = _ask(f"Unit name (e.g. {examples}; blank = generic)", "")
+        unit_name = raw_unit.strip().lower() or None
+        vpu = _ask("Monetary value per unit (enables implied ROAS; 1 = disabled)", "1.0")
         value_per_unit = float(vpu)
 
     # Step 3 – channels
@@ -109,6 +114,7 @@ def build_spec_from_answers(
         target=TargetUnit(
             column=target_col,
             type=target_type,  # type: ignore[arg-type]
+            unit_name=unit_name,
             value_per_unit=value_per_unit,
         ),
         channels=channels,

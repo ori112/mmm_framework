@@ -12,15 +12,24 @@ def generate_mops_report(
     spec,
     diagnostics: dict,
     contributions_df: pd.DataFrame,
-    roas_df: pd.DataFrame,
+    effectiveness_df: pd.DataFrame,
     optimize_result: dict | None = None,
 ) -> str:
     """Generate Marketing Ops markdown report.
 
+    `effectiveness_df` is the normalised output of compute_effectiveness().
     Returns the rendered markdown string.
     """
     currency = getattr(spec, "currency", "ILS")
     company = getattr(spec, "company", "")
+    is_revenue = spec.target.type == "revenue"
+    unit_name = spec.target.unit_name or ("unit" if not is_revenue else "")
+
+    label = effectiveness_df["metric_label"].iloc[0] if effectiveness_df is not None and len(effectiveness_df) > 0 else ("ROAS" if is_revenue else "CPA")
+    col_header = "ROAS" if is_revenue else label
+
+    total_spend = effectiveness_df["spend_ils"].sum() if effectiveness_df is not None and len(effectiveness_df) > 0 else 0
+    total_contrib = contributions_df["mean"].sum() if len(contributions_df) > 0 else 0
 
     lines = [
         "# Marketing Operations Report",
@@ -28,33 +37,38 @@ def generate_mops_report(
         "",
         "## Channel Investment Summary",
         "",
-        "| Channel | Spend | Contribution | ROAS | Status |",
-        "|---------|-------|--------------|------|--------|",
+        f"| Channel | Spend | Contribution | {col_header} | Status |",
+        f"|---------|-------|--------------|{'—' * max(len(col_header), 4)}|--------|",
     ]
 
-    hdi_low_col = [c for c in roas_df.columns if "hdi" in c and "low" in c] if roas_df is not None else []
-    hdi_high_col = [c for c in roas_df.columns if "hdi" in c and "high" in c] if roas_df is not None else []
-
-    total_spend = roas_df["spend_ils"].sum() if roas_df is not None and len(roas_df) > 0 else 0
-    total_contrib = contributions_df["mean"].sum() if len(contributions_df) > 0 else 0
-
-    if roas_df is not None and len(roas_df) > 0:
-        median_roas = roas_df["roas_mean"].median()
-        for _, row in roas_df.sort_values("roas_mean", ascending=False).iterrows():
+    if effectiveness_df is not None and len(effectiveness_df) > 0:
+        median_val = effectiveness_df["metric_value_mean"].median()
+        # For ROAS: higher = better (sort desc). For cost-per-unit: lower = better (sort asc).
+        eff_sorted = effectiveness_df.sort_values("metric_value_mean", ascending=not is_revenue)
+        for _, row in eff_sorted.iterrows():
             ch = row["channel"].replace("_spend", "")
             contrib_row = contributions_df[contributions_df["channel"] == row["channel"]]
             contrib = contrib_row["mean"].values[0] if len(contrib_row) > 0 else 0
-            status = "above median" if row["roas_mean"] > median_roas else "below median"
+            val = row["metric_value_mean"]
+
+            if is_revenue:
+                status = "above median" if val > median_val else "below median"
+                val_fmt = f"{val:.2f}x"
+                contrib_fmt = fmt_currency(contrib, currency, 0)
+            else:
+                status = "efficient" if val < median_val else "above median cost"
+                val_fmt = f"{fmt_currency(val, currency, 0)}/{unit_name}"
+                contrib_fmt = f"{contrib:,.0f} {unit_name}s"
+
             lines.append(
                 f"| {ch} | {fmt_currency(row['spend_ils'], currency, 0)} "
-                f"| {fmt_currency(contrib, currency, 0)} "
-                f"| {row['roas_mean']:.2f}x | {status} |"
+                f"| {contrib_fmt} | {val_fmt} | {status} |"
             )
 
     lines += ["", "## Saturation Notes", ""]
     lines.append(
-        "Saturation analysis requires a fitted model with posterior predictive. "
-        "Run `/mmm-attribute` then `/mmm-report` after fitting to populate this section."
+        "Saturation curves require a fitted model with posterior predictive. "
+        "Run `/mmm-fit` then `/mmm-attribute` to populate saturation analysis."
     )
     lines.append("")
 
@@ -77,7 +91,6 @@ def generate_mops_report(
                 f"| {fmt_currency(opt_spend, currency, 0)} "
                 f"| {sign}{fmt_currency(delta, currency, 0)} |"
             )
-
         uplift = optimize_result.get("expected_uplift_mean", 0)
         lines.append(
             f"\nExpected contribution uplift from reallocation: **{fmt_currency(uplift, currency, 0)}**"
