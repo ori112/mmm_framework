@@ -150,11 +150,11 @@ Note: `mmm-multi-geo-panel` skill is intentionally out of scope (single-series f
 
 ## Build Phases
 
-| Phase | Scope |
-|---|---|
-| 0 (done) | Foundations: spec, workspace, CLI, loaders |
-| 1 | Greenfield MVP: data quality, prior_engine, model_factory, fit_runner, diagnose |
-| 2 | Attribution + CMO/CFO reports |
-| 3 | Budget optimization + iterative improvement tournament |
-| 4 | Brownfield warm-start + BigQuery + IL macro/search providers |
-| 5 | MOps/DS reports, overfit/prior-pull diagnostics, industry seasonality presets |
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | Foundations: spec, workspace, CLI, loaders | done |
+| 1 | Greenfield MVP: data quality, prior_engine, model_factory, fit_runner, diagnose | done |
+| 2 | Attribution + CMO/CFO reports | done |
+| 3 | Budget optimization + iterative improvement tournament | done |
+| 4 | Brownfield warm-start + BigQuery + IL macro/search providers | done |
+| 5 | MOps/DS reports, overfit/prior-pull diagnostics, industry seasonality presets | done |

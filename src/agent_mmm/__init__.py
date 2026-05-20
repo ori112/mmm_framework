@@ -7,6 +7,8 @@ from .model_factory.builder import build_mmm
 from .fit_runner.runner import run_fit, run_pipeline
 from .diagnose.convergence import check_convergence
 from .diagnose.report import write_diagnostics
+from .diagnose.overfit import compute_overfit
+from .diagnose.prior_pull import audit_prior_pull
 from .attribute.contributions import get_contributions
 from .attribute.roas import compute_roas
 from .report.render_all import render_all
@@ -36,6 +38,8 @@ __all__ = [
     "run_pipeline",
     "check_convergence",
     "write_diagnostics",
+    "compute_overfit",
+    "audit_prior_pull",
     "get_contributions",
     "compute_roas",
     "render_all",
