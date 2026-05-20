@@ -7,11 +7,13 @@ import pandas as pd
 from .loaders.csv import load_csv
 from .loaders.dataframe import load_dataframe
 from .loaders.parquet import load_parquet
+from .loaders.bigquery import load_bigquery
 
 _REGISTRY: dict[str, Callable] = {
     "csv": load_csv,
     "parquet": load_parquet,
     "dataframe": load_dataframe,
+    "bigquery": load_bigquery,
 }
 
 

@@ -76,10 +76,32 @@ def test_dataframe_loader_missing_key():
 
 
 def test_unknown_source():
+    from agent_mmm.data.io import _REGISTRY
     spec = Spec(
-        data=DataCfg(source="bigquery"),  # type: ignore[arg-type]
+        data=DataCfg(source="csv"),
         target=TargetUnit(column="revenue"),
         channels=[Channel(name="google", spend_col="google_spend")],
     )
-    with pytest.raises(ValueError, match="No loader registered"):
-        load_panel(spec)
+    # Save and remove csv temporarily to simulate unknown source
+    orig = _REGISTRY.pop("csv")
+    try:
+        with pytest.raises(ValueError, match="No loader registered"):
+            load_panel(spec)
+    finally:
+        _REGISTRY["csv"] = orig
+
+
+def test_bigquery_loader_import_error():
+    """BigQuery loader raises ImportError when google-cloud-bigquery is not installed."""
+    import sys
+    # Only run when google-cloud-bigquery is absent
+    if "google.cloud" in sys.modules:
+        pytest.skip("google-cloud-bigquery is installed")
+    from agent_mmm.data.loaders.bigquery import load_bigquery
+    spec = Spec(
+        data=DataCfg(source="bigquery", path="project.dataset.table"),
+        target=TargetUnit(column="revenue"),
+        channels=[Channel(name="google", spend_col="google_spend")],
+    )
+    with pytest.raises(ImportError, match="google-cloud-bigquery"):
+        load_bigquery(spec)

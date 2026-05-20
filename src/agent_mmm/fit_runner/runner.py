@@ -94,6 +94,10 @@ def run_pipeline(spec_path=None, skip_prior_check: bool = False) -> dict:
 
     print("\n[2/5] Recommending priors...")
     model_config = recommend_priors(sp, df)
+    if sp.brownfield is not None:
+        from ..fit_runner.warmstart import load_warmstart_config
+        print("  Brownfield: tightening priors from existing idata...")
+        model_config = load_warmstart_config(sp, model_config)
     print(f"  Priors set for {len(sp.channels)} channels.")
 
     print("\n[3/5] Fitting model...")
