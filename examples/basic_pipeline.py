@@ -75,7 +75,12 @@ if __name__ == "__main__":
     print("\nFitting model (fast mode: 200 draws, 2 chains) …")
     mmm = run_fit(spec, mc, df_with_controls, skip_prior_check=True)
 
-    # ── 6. Diagnose ──────────────────────────────────────────────────────────────
+    # ── 6. Posterior predictive check (populates DS report) ──────────────────────
+    from agent_mmm.fit_runner.checks import run_posterior_predictive
+    print("\nRunning posterior predictive check …")
+    run_posterior_predictive(mmm, X=df_with_controls.drop(columns=[spec.target.column], errors="ignore"))
+
+    # ── 7. Diagnose ──────────────────────────────────────────────────────────────
     from agent_mmm.diagnose.report import write_diagnostics
 
     target_col = spec.target.column
@@ -86,7 +91,7 @@ if __name__ == "__main__":
     conv = report["convergence"]
     print(f"\nConvergence tier: {conv['tier']}  rhat_max: {conv.get('rhat_max', 'N/A')}")
 
-    # ── 7. Attribution ───────────────────────────────────────────────────────────
+    # ── 8. Attribution ───────────────────────────────────────────────────────────
     from agent_mmm.attribute.contributions import get_contributions
     from agent_mmm.attribute.roas import compute_effectiveness
 
@@ -103,7 +108,7 @@ if __name__ == "__main__":
         ch = row["channel"].replace("_spend", "")
         print(f"  {ch}: {row['metric_value_mean']:.2f}x")
 
-    # ── 8. Reports ──────────────────────────────────────────────────────────────
+    # ── 9. Reports ──────────────────────────────────────────────────────────────
     from agent_mmm.report.render_all import render_all
 
     reports = render_all(mmm, X, y, spec, report)

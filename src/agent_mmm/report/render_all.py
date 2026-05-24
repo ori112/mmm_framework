@@ -39,5 +39,5 @@ def render_all(
     reports["cmo"] = generate_cmo_report(spec, diagnostics, contributions_df, roas_df)
     reports["cfo"] = generate_cfo_report(spec, diagnostics, contributions_df, roas_df)
     reports["mops"] = generate_mops_report(spec, diagnostics, contributions_df, roas_df, optimize_result)
-    reports["ds"] = generate_ds_report(spec, diagnostics, prior_pull_df, overfit_result)
+    reports["ds"] = generate_ds_report(spec, diagnostics, prior_pull_df, overfit_result, mmm=mmm)
     return reports
