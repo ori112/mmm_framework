@@ -1,56 +1,67 @@
 # TODO — Manual Tasks
 
-Actions that require the user to take steps outside the codebase (API keys, accounts, etc.).
+Actions that require steps outside the codebase (API keys, accounts, infrastructure).
 
 ---
 
-## Required for External Control Variables
+## 🔴 Blocking — External Data Providers
 
 ### Bank of Israel (BoI) API
-- Endpoint: https://www.boi.org.il/en/economic-roles/financial-markets/exchange-rates/
-- Data needed: policy rate, ILS/USD, ILS/EUR daily fixings, M1/M2, inflation expectations
-- Action: Confirm open-data endpoint URL and terms of use. Set `BOI_API_URL` in `.env`.
+- **Problem:** `data/providers/boi.py` uses a placeholder URL that currently returns 404 (see `ERRORS.md`).
+- **Data needed:** Policy rate, ILS/USD daily fixing, ILS/EUR, M1/M2, inflation expectations.
+- **Action:**
+  1. Find the correct open-data endpoint at https://www.boi.org.il/en/economic-roles/financial-markets/
+  2. Confirm terms of use (public portal, no key typically needed).
+  3. Update the `BASE_URL` and series codes in `src/agent_mmm/data/providers/boi.py`.
+  4. Set `BOI_API_URL` in `.env` if endpoint is configurable.
 
 ### CBS (Central Bureau of Statistics, Israel)
-- Website: https://www.cbs.gov.il
-- Data needed: CPI (מדד המחירים לצרכן), unemployment, consumer confidence, retail trade index
-- Action: Obtain API access if required; confirm endpoint format. Set `CBS_API_KEY` in `.env` if needed.
-
-### Google Trends — Israel
-- Implementation: `pytrends` (no key required, rate-limited)
-- Alternative: SerpAPI or DataForSEO for higher throughput / brand + competitor queries
-- Action: If rate limits are hit, obtain SerpAPI key and set `SERPAPI_KEY` in `.env`.
-
----
-
-## Required for BigQuery Loader (Phase 4)
-
-- GCP project with BigQuery access
-- Service account JSON or run `gcloud auth application-default login`
-- Action: Create GCP project, set `GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json` in `.env`
+- **Problem:** `data/providers/cbs.py` uses a placeholder URL.
+- **Data needed:** CPI, unemployment, consumer confidence, retail trade index.
+- **Action:**
+  1. Check https://www.cbs.gov.il/en for open API access.
+  2. Confirm endpoint format and authentication (public or key-gated).
+  3. Update `src/agent_mmm/data/providers/cbs.py`.
+  4. Set `CBS_API_KEY` in `.env` if a key is required.
 
 ---
 
-## Optional
+## 🟡 Optional — Performance & Scale
 
-### FX Backup API
-- Only needed if BoI rates are insufficient for non-ILS report currency conversion
-- Candidates: Open Exchange Rates, Fixer.io
-- Action: If needed, obtain key and set `FX_API_KEY` in `.env`
+### C++ compiler for PyTensor (Windows)
+- **Problem:** Without `g++`, MCMC sampling runs in pure Python mode — 5–10× slower.
+- **Action:** Install MinGW-w64 via MSYS2 and add `C:\msys64\ucrt64\bin` to PATH (see `ERRORS.md`).
+
+### Google Trends — higher throughput
+- **Problem:** `pytrends` (no key, rate-limited) is fine for occasional pulls but fails under load.
+- **Action:** If rate limits are hit, obtain a SerpAPI key and set `SERPAPI_KEY` in `.env`. `google_trends_il.py` uses it automatically.
+
+### BigQuery loader
+- **Status:** Implemented in `data/loaders/bigquery.py`. Requires GCP credentials.
+- **Action:**
+  1. Create a GCP project with BigQuery access.
+  2. Either `gcloud auth application-default login` or set `GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json` in `.env`.
+  3. Set `spec.data.source = "bigquery"` and configure `project`, `dataset`, `table` in `DataCfg`.
 
 ---
 
-## GitHub Setup
+## 🟢 Infrastructure
 
-- [ ] Confirm private GitHub repo is set up
-- [ ] Verify `.gitignore` excludes `mmm-workspace/`, `.env`, `*.nc`
-- [ ] Add branch protection on `main`
+### GitHub repository
+- [x] Repo created at https://github.com/ori112/mmm_framework
+- [x] `.gitignore` excludes `mmm-workspace/`, `.env`, `*.nc`
+- [ ] Add branch protection on `main` (require PR + review before merge)
+- [ ] Set up GitHub Actions CI to run `uv run pytest tests/unit/` on every push
 
 ---
 
-## Deferred Features (future plans)
+## 💡 Deferred Features
 
-- HillSaturation variant in tournament variants grid
-- Hebrew-language section titles in CMO/CFO reports
-- Hierarchical priors for future multi-geo extension
-- Automated structural-break detection integration with controls recommendation
+| Feature | Notes |
+|---|---|
+| `HillSaturation` in tournament variant grid | Currently only `LogisticSaturation`; Hill is implemented in transforms.py but not in `iter_loop/variants.py` |
+| Hebrew-language section titles | CMO/CFO reports could have Hebrew headings; needs `spec.report_language` field |
+| Prior predictive check in `basic_pipeline.py` | `run_prior_predictive()` exists but is not called in the example; requires calling before `run_fit()` |
+| Structural-break detection wired to controls | `data/collinearity.py` has `structural_break()` but it's not surfaced in `recommend_controls()` |
+| FX backup API | Only needed if BoI rates unavailable and non-ILS report currency required |
+| Hierarchical priors for multi-geo | Out of scope for v1; would require the `mmm-multi-geo-panel` skill |
