@@ -16,6 +16,10 @@ from __future__ import annotations
 from pathlib import Path
 
 if __name__ == "__main__":
+    import sys
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     from agent_mmm.spec.schema import Brownfield, Channel, DataCfg, Spec, SamplerCfg, TargetUnit
     from agent_mmm.spec.loader import save_spec
     from agent_mmm.workspace.paths import ensure_workspace, idata_path, spec_path

@@ -13,6 +13,11 @@ import tempfile
 from pathlib import Path
 
 if __name__ == "__main__":
+    # Force UTF-8 stdout so ₪ and other Unicode renders correctly on Windows
+    import sys
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     # Redirect workspace to a temp dir so this example doesn't pollute the repo
     _tmpdir = tempfile.mkdtemp(prefix="mmm_example_")
     os.chdir(_tmpdir)
